@@ -1,5 +1,6 @@
 import { Task } from "@lit/task";
 import { LitElement, html, css } from "lit";
+import { property } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 
 
@@ -20,8 +21,8 @@ function formatDateToFullText(dataString: string): string {
 }
 
 class MyTaskComponent extends LitElement {
-    static styles = css`
-        * {
+    static styles? = css`
+    * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -30,7 +31,7 @@ class MyTaskComponent extends LitElement {
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #1a1a1a;
-            color: #535050ff;
+            color: #ffffff;
             min-height: 100vh;
         }
 
@@ -49,6 +50,50 @@ class MyTaskComponent extends LitElement {
             color: #00d4aa;
         }
 
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .group-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #ccc;
+            transition: color 0.2s;
+        }
+
+        .group-toggle:hover {
+            color: #00d4aa;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #555;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            transition: all 0.2s;
+        }
+
+        .checkbox.checked {
+            background-color: #00d4aa;
+            border-color: #00d4aa;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
         .header-info {
             font-size: 14px;
             color: #999;
@@ -60,6 +105,7 @@ class MyTaskComponent extends LitElement {
             padding: 20px;
         }
 
+        /* Estilos para modo agrupado */
         .day-group {
             margin-bottom: 20px;
             background-color: #2d2d2d;
@@ -91,6 +137,14 @@ class MyTaskComponent extends LitElement {
             font-size: 14px;
             color: #00d4aa;
             font-weight: 500;
+        }
+
+        /* Estilos para modo não agrupado */
+        .flat-container {
+            background-color: #2d2d2d;
+            
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .tasks-list {
@@ -149,6 +203,17 @@ class MyTaskComponent extends LitElement {
             font-size: 12px;
             color: #666;
             margin-top: 4px;
+        }
+
+        .task-date {
+            font-size: 12px;
+            color: #00d4aa;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .flat-mode {
+            background-color: #1a1a1a;
         }
 
         .task-actions {
@@ -270,6 +335,15 @@ class MyTaskComponent extends LitElement {
             display: none;
         }
 
+        /* Ocultar elementos com base no modo */
+        .flat-mode .day-group {
+            display: none;
+        }
+
+        .grouped-mode .flat-container {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -291,13 +365,24 @@ class MyTaskComponent extends LitElement {
                 padding: 10px 15px;
                 font-size: 11px;
             }
+
+            .header-controls {
+                gap: 10px;
+            }
+
+            .group-toggle {
+                font-size: 12px;
+            }
         }
-    `        
+    `
+
+    @property({ type: Boolean }) isGroupedByDay = false
+    @property({ type: Array }) data = {}
 
     _myTasks = new Task(this, {        
         task: async([], {signal}) => {
             try {                
-                const response = await fetch(`${apiUrl}/criteria?grouped=true`, {signal})
+                const response = await fetch(`${apiUrl}/criteria?grouped=${this.isGroupedByDay ? 'true' : 'false'}`, {signal})
                 if (!response.ok) {
                     throw new Error(`Response status: ${response.status}`)
                 }
@@ -310,18 +395,54 @@ class MyTaskComponent extends LitElement {
         args: () => []
     })
 
-    private _grouped(item: any) {
-        return html`
-            <div class="container">
-                ${map(item, (g: any) => html`
-                <div class="day-group">
-                    <div class="day-header" @click="${this._handleClickToggleDayGroup}">
-                        <div class="day-title">${formatDateToFullText(g.day)}</div>
-                        <div class="day-summary">${g.tasks?.length} tarefa(s) • ${g.tasks?.filter(function(i: any) { return i.isCompleted }).length} completa(s) • ${g.tasks?.filter(function(i: any) { return !i.isCompleted && !i.isCaceled }).length} pendente(s) • ${g.tasks?.filter(function(i: any) { return i.isCaceled }).length} cancelada(s) </div>
-                        <span class="collapse-icon">▼</span>
+    _template(item: any) {
+        if (!item || !item.length) {
+            return html`<p>Não existem tarefas para exibir</p>`
+        }
+        if (this.isGroupedByDay) {
+            // const elem: HTMLElement | null = document.getElementById('tasks-grouped')
+            // if (elem) 
+            //     elem.innerHTML = ''
+            return html`
+                <div class="container" id="tasks-grouped">
+                    ${map(item, (g: any) => html`
+                    <div class="day-group">
+                        <div class="day-header" @click="${this._handleClickToggleDayGroup}">
+                            <div class="day-title">${formatDateToFullText(g.day)}</div>
+                            <div class="day-summary">${g.tasks?.length} tarefa(s) • ${g.tasks?.filter(function(i: any) { return i.isCompleted }).length} completa(s) • ${g.tasks?.filter(function(i: any) { return !i.isCompleted && !i.isCaceled }).length} pendente(s) • ${g.tasks?.filter(function(i: any) { return i.isCaceled }).length} cancelada(s) </div>
+                            <span class="collapse-icon">▼</span>
+                        </div>
+                        <div class="tasks-list">
+                            ${map(g.tasks, (t: any) => html`
+                                <div class="task-item" data-status="pending">
+                                <div class="task-content">                                        
+                                    <div class="task-details">
+                                        <div class="task-title">${t.title}</div>
+                                        <div class="task-description">${t.description}</div>                                        
+                                    </div>                                        
+                                    ${t.isCaceled ? html`<div class="status-badge status-cancelled">Cancelada</div>` : !t.isCompleted ? html`<div class="status-badge status-pending">Pendente</div>` : html`<div class="status-badge status-completed">Completa</div>`}
+                                </div>
+                                <div class="task-actions">
+                                    <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
+                                    <button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>
+                                    <button class="action-btn btn-cancel" onclick="cancelTask(this)">Cancelar</button>
+                                </div>
+                            </div>
+                            `)}
+                        </div>
                     </div>
+                    `)}
+                </div>
+            `
+        }
+        else {
+            // const elem: HTMLElement | null = document.getElementById('task-list-no-grouped')
+            // if (elem) 
+            //     elem.innerHTML = ''
+            return html`
+                <div class="flat-container" id="task-list-no-grouped">
                     <div class="tasks-list">
-                        ${map(g.tasks, (t: any) => html`
+                        ${map(item, (t: any) => html`
                             <div class="task-item" data-status="pending">
                             <div class="task-content">                                        
                                 <div class="task-details">
@@ -339,15 +460,25 @@ class MyTaskComponent extends LitElement {
                         `)}
                     </div>
                 </div>
-                `)}
-            </div>
-        `
+            `
+        }
+    }
+
+    _spanCheckBoxHandleClick() {
+        this.isGroupedByDay = !this.isGroupedByDay
+        this._myTasks.run()
     }
 
     render() {
         const header = html`
         <div class="header">
             <h1>TAREFAS</h1>
+            <div class="header-controls">
+                <div class="group-toggle" .value="${this.isGroupedByDay}" @click="${this._spanCheckBoxHandleClick}">
+                    <div class="checkbox ${this.isGroupedByDay ? "checked" : ''}"></div>
+                    <span>Agrupar por dia</span>
+                </div>                
+            </div>            
             <div class="header-info">
                 <span id="current-date"></span>
             </div>
@@ -356,8 +487,8 @@ class MyTaskComponent extends LitElement {
         return this._myTasks.render({
             pending: () => html`${header}<p>Buscando tarefas...</p>`,
             complete: (item) => {
-                console.log(item)
-                return html`${header}${this._grouped(item)}`                
+                this.data = item
+                return html`${header}${this._template(this.data)}`
             },
             error: (e) => html`<p>Error: ${e}</p>`
         })
