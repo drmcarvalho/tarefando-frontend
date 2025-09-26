@@ -376,8 +376,7 @@ class MyTaskComponent extends LitElement {
         }
     `
 
-    @property({ type: Boolean }) isGroupedByDay = false
-    @property({ type: Array }) data = {}
+    @property({ type: Boolean }) isGroupedByDay = false    
 
     _myTasks = new Task(this, {        
         task: async([], {signal}) => {
@@ -399,10 +398,7 @@ class MyTaskComponent extends LitElement {
         if (!item || !item.length) {
             return html`<p>Não existem tarefas para exibir</p>`
         }
-        if (this.isGroupedByDay) {
-            // const elem: HTMLElement | null = document.getElementById('tasks-grouped')
-            // if (elem) 
-            //     elem.innerHTML = ''
+        if (this.isGroupedByDay) {            
             return html`
                 <div class="container" id="tasks-grouped">
                     ${map(item, (g: any) => html`
@@ -435,10 +431,7 @@ class MyTaskComponent extends LitElement {
                 </div>
             `
         }
-        else {
-            // const elem: HTMLElement | null = document.getElementById('task-list-no-grouped')
-            // if (elem) 
-            //     elem.innerHTML = ''
+        else {            
             return html`
                 <div class="flat-container" id="task-list-no-grouped">
                     <div class="tasks-list">
@@ -486,9 +479,8 @@ class MyTaskComponent extends LitElement {
 
         return this._myTasks.render({
             pending: () => html`${header}<p>Buscando tarefas...</p>`,
-            complete: (item) => {
-                this.data = item
-                return html`${header}${this._template(this.data)}`
+            complete: (item) => {                
+                return html`${header}${this._template(item)}`
             },
             error: (e) => html`<p>Error: ${e}</p>`
         })
