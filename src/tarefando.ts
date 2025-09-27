@@ -31,7 +31,7 @@ function formatDate(dateString: string): string {
 
 class MyTaskComponent extends LitElement {
     static styles? = css`
-            * {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -151,7 +151,8 @@ class MyTaskComponent extends LitElement {
         /* Estilos para modo não agrupado */
         .flat-container {
             margin-bottom: 20px;
-            background-color: #2d2d2d;            
+            background-color: #2d2d2d;
+            border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
@@ -434,11 +435,218 @@ class MyTaskComponent extends LitElement {
         .legend-color.training { background-color: #3742fa; }
         .legend-color.admin { background-color: #ffa502; }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #2d2d2d;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #00d4aa;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #ff4757;
+            background-color: rgba(255, 71, 87, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #404040;
+            border-radius: 8px;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.2s;
+            resize: none;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #00d4aa;
+            box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23999' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+            appearance: none;
+        }
+
+        .task-type-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .task-type-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .task-type-name {
+            font-size: 14px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #404040;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 100px;
+        }
+
+        .btn-primary {
+            background-color: #00d4aa;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #00b896;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background-color: #555;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background-color: #555;
+            color: #ccc;
+            border: 1px solid #666;
+        }
+
+        .btn-secondary:hover {
+            background-color: #666;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
-            }                        
-
+            }
+            
             .task-item {
                 padding: 15px;
                 flex-direction: column;
@@ -467,10 +675,29 @@ class MyTaskComponent extends LitElement {
             .legend-items {
                 justify-content: center;
             }
+
+            .modal-content {
+                margin: 20px;
+                padding: 20px;
+                max-width: none;
+                width: calc(100% - 40px);
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
         }
     `
 
     @property({ type: Boolean }) isGroupedByDay = false    
+    @property({ type: Boolean }) showModal = false
+    @property({ type: String }) taskTitle  = null
+    @property({ type: String}) taskDescription = null
+    @property({ type: String }) taskTypeSelectedValue = ""
 
     _myTasks = new Task(this, {        
         task: async([], {signal}) => {
@@ -518,8 +745,68 @@ class MyTaskComponent extends LitElement {
                         <span>Administrativo</span>
                     </div>
                 </div>
+            </div>            
+        `
+        const addTask = html`<button class="add-task-btn" @click="${this._showTaskModal}">+</button>`
+        const taskModal = html`     
+            <div id="taskModal" class="modal ${this.showModal ? 'show' : ''}">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">✨ Nova Tarefa</h2>
+                        <button class="close-btn" @click="${this._closeTaskModal}">&times;</button>
+                    </div>
+                    
+                    <form id="addTaskForm">
+                        <div class="form-group">
+                            <label class="form-label" for="taskTitle">Título *</label>
+                            <input 
+                                .value="${this.taskTitle}"
+                                type="text" 
+                                id="taskTitle" 
+                                class="form-input" 
+                                placeholder="Digite o título da tarefa..."
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="taskDescription">Descrição</label>
+                            <textarea 
+                                .value="${this.taskDescription}"
+                                id="taskDescription" 
+                                class="form-textarea" 
+                                placeholder="Descreva os detalhes da tarefa... (opcional)"
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="taskType">Tipo da Tarefa *</label>
+                            <select .value="${this.taskTypeSelectedValue}" id="taskType" class="form-select" @change="${this._handleSelectChange}" required>
+                                <option value="">Selecione o tipo da tarefa...</option>
+                                <option value="0">Urgente</option>
+                                <option value="1">Normal</option>
+                                <option value="2">Alinhamento de Equipe</option>
+                                <option value="3">Treinamento</option>
+                                <option value="4">Administrativo</option>
+                            </select>
+                            <div id="taskTypePreview" class="task-type-preview" style="display: none;">
+                                <div id="previewColor" class="task-type-color"></div>
+                                <span id="previewName" class="task-type-name"></span>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="${this._closeTaskModal}">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="saveTaskBtn">
+                                Salvar Tarefa
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <button class="add-task-btn" onclick="addTask()">+</button>
         `
         if (this.isGroupedByDay) {            
             return html`
@@ -552,8 +839,9 @@ class MyTaskComponent extends LitElement {
                         </div>
                     </div>
                     `)}
-                </div>
-                <button class="add-task-btn" onclick="addTask()">+</button>
+                </div>                
+                ${taskModal}
+                ${addTask}
             `
         }
         else {            
@@ -581,8 +869,36 @@ class MyTaskComponent extends LitElement {
                         `)}
                     </div>
                 </div>
+                ${taskModal}
+                ${addTask}
             `
         }
+    }
+
+    _showTaskModal() {        
+        this.showModal = true
+        document.body.style.overflow = 'hidden';
+        document.getElementById('taskTitle')?.focus();
+    }
+
+    _clearFields() {
+        this.taskTitle = null
+        this.taskDescription = null
+        this.taskTypeSelectedValue = ""        
+    }
+
+    _handleSelectChange(e: Event) {
+        this.taskTypeSelectedValue = (e.target as HTMLInputElement).value        
+    }
+
+    _closeTaskModal() {
+        this.showModal = false
+        this._clearFields()
+        document.body.style.overflow = 'auto'
+        const preview = document.getElementById('taskTypePreview')
+        if (preview) {
+            preview.style.display = 'none'
+        }        
     }
 
     _spanCheckBoxHandleClick() {
