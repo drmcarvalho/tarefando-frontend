@@ -544,7 +544,7 @@ class MyTaskComponent extends LitElement {
                                 <div class="task-actions">
                                     <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
                                     <button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>
-                                    <button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>
+                                    ${!t.isCaceled ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                                 </div>
                             </div>
                             `)}
@@ -573,7 +573,7 @@ class MyTaskComponent extends LitElement {
                             <div class="task-actions">
                                 <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
                                 <button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>
-                                <button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>
+                                ${!t.isCaceled ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                             </div>
                         </div>
                         `)}
