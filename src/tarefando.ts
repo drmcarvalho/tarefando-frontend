@@ -149,12 +149,12 @@ class MyTaskComponent extends LitElement {
         }
 
         /* Estilos para modo não agrupado */
-        .flat-container {
-            margin-bottom: 20px;
+        .flat-container {            
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 800px;
             background-color: #2d2d2d;
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .tasks-list {
@@ -389,6 +389,7 @@ class MyTaskComponent extends LitElement {
             border-radius: 12px;
             padding: 15px 20px;
             margin-bottom: 20px;
+            margin-top: 20px;            
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
@@ -715,38 +716,62 @@ class MyTaskComponent extends LitElement {
         args: () => []
     })    
 
+    _showTaskModal() {        
+        this.showModal = true
+        document.body.style.overflow = 'hidden';
+        document.getElementById('taskTitle')?.focus();
+    }
+
+    _clearFields() {
+        this.taskTitle = null
+        this.taskDescription = null
+        this.taskTypeSelectedValue = ""        
+    }
+
+    _handleSelectChange(e: Event) {
+        this.taskTypeSelectedValue = (e.target as HTMLInputElement).value        
+    }
+
+    _closeTaskModal() {
+        this.showModal = false
+        this._clearFields()
+        document.body.style.overflow = 'auto'
+        const preview = document.getElementById('taskTypePreview')
+        if (preview) {
+            preview.style.display = 'none'
+        }        
+    }
+
+    _spanCheckBoxHandleClick() {
+        this.isGroupedByDay = !this.isGroupedByDay
+        this._myTasks.run()
+    }
+
+    async _cancelHandleClick(e: Event) {        
+        try {
+            const target = e.currentTarget as HTMLElement
+            const id = target?.getAttribute('id')
+            const response = await fetch(`${apiUrl}/cancel/${id}`, {method: 'PATCH'})
+            if (!response.ok) {
+                alert('Erro ao cancelar tarefa')
+            }
+            this._myTasks.run()
+        }
+        catch (err) {
+            console.log(err)
+        }
+    }
+
+    _handleClickToggleDayGroup(e: Event) {        
+        const target = e.currentTarget as HTMLElement
+        const dayGroup = target.parentNode as HTMLElement
+        dayGroup?.classList.toggle('collapsed')        
+    }
+
     _template(item: any) {
         if (!item || !item.length) {
             return html`<p>Não existem tarefas para exibir</p>`
-        }        
-        const colorLegend = html`
-            <!-- Legenda de cores -->
-            <div class="legend">
-                <h3>Tipos de Tarefas</h3>
-                <div class="legend-items">
-                    <div class="legend-item">
-                        <div class="legend-color urgent"></div>
-                        <span>Urgente</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color normal"></div>
-                        <span>Normal</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color team"></div>
-                        <span>Alinhamento de Equipe</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color training"></div>
-                        <span>Treinamento</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color admin"></div>
-                        <span>Administrativo</span>
-                    </div>
-                </div>
-            </div>            
-        `
+        }
         const addTask = html`<button class="add-task-btn" @click="${this._showTaskModal}">+</button>`
         const taskModal = html`     
             <div id="taskModal" class="modal ${this.showModal ? 'show' : ''}">
@@ -810,8 +835,7 @@ class MyTaskComponent extends LitElement {
         `
         if (this.isGroupedByDay) {            
             return html`
-                <div class="container" id="tasks-grouped">                    
-                    ${colorLegend}
+                <div class="container" id="tasks-grouped">
                     ${map(item, (g: any) => html`
                     <div class="day-group">
                         <div class="day-header" @click="${this._handleClickToggleDayGroup}">
@@ -846,8 +870,7 @@ class MyTaskComponent extends LitElement {
         }
         else {            
             return html`
-                <div class="flat-container" id="task-list-no-grouped">
-                    ${colorLegend}
+                <div class="flat-container" id="task-list-no-grouped">                    
                     <div class="tasks-list">
                         ${map(item, (t: any) => html`
                             <div class="task-item" data-type="${t.taskTypeString}">
@@ -875,59 +898,35 @@ class MyTaskComponent extends LitElement {
         }
     }
 
-    _showTaskModal() {        
-        this.showModal = true
-        document.body.style.overflow = 'hidden';
-        document.getElementById('taskTitle')?.focus();
-    }
-
-    _clearFields() {
-        this.taskTitle = null
-        this.taskDescription = null
-        this.taskTypeSelectedValue = ""        
-    }
-
-    _handleSelectChange(e: Event) {
-        this.taskTypeSelectedValue = (e.target as HTMLInputElement).value        
-    }
-
-    _closeTaskModal() {
-        this.showModal = false
-        this._clearFields()
-        document.body.style.overflow = 'auto'
-        const preview = document.getElementById('taskTypePreview')
-        if (preview) {
-            preview.style.display = 'none'
-        }        
-    }
-
-    _spanCheckBoxHandleClick() {
-        this.isGroupedByDay = !this.isGroupedByDay
-        this._myTasks.run()
-    }
-
-    async _cancelHandleClick(e: Event) {        
-        try {
-            const target = e.currentTarget as HTMLElement
-            const id = target?.getAttribute('id')
-            const response = await fetch(`${apiUrl}/cancel/${id}`, {method: 'PATCH'})
-            if (!response.ok) {
-                alert('Erro ao cancelar tarefa')
-            }
-            this._myTasks.run()
-        }
-        catch (err) {
-            console.log(err)
-        }
-    }
-
-    _handleClickToggleDayGroup(e: Event) {        
-        const target = e.currentTarget as HTMLElement
-        const dayGroup = target.parentNode as HTMLElement
-        dayGroup?.classList.toggle('collapsed')        
-    }
-
     render() {
+        const colorLegend = html`
+            <!-- Legenda de cores -->
+            <div class="legend">
+                <h3>Tipos de Tarefas</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color urgent"></div>
+                        <span>Urgente</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color normal"></div>
+                        <span>Normal</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color team"></div>
+                        <span>Alinhamento de Equipe</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color training"></div>
+                        <span>Treinamento</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color admin"></div>
+                        <span>Administrativo</span>
+                    </div>
+                </div>
+            </div>            
+        `
         const header = html`
         <div class="header">
             <h1>TAREFAS</h1>
@@ -939,9 +938,10 @@ class MyTaskComponent extends LitElement {
             </div>            
             <div class="header-info">
                 <span id="current-date"></span>
-            </div>
-        </div>`
-
+            </div>            
+        </div>
+        ${colorLegend}
+        `
         return this._myTasks.render({
             pending: () => html`${header}<p>Buscando tarefas...</p>`,
             complete: (item) => {                
