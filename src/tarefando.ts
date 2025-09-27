@@ -3,20 +3,17 @@ import { LitElement, html, css } from "lit";
 import { property } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 
-
 const apiUrl: String = "https://localhost:7222/api/tasks"
 
 function formatDateToFullText(dataString: string): string {
-  const data = new Date(dataString)
-  
+  const data = new Date(dataString)  
   const opcoes: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     timeZone: 'America/Sao_Paulo'
-  }
-  
+  }  
   return data.toLocaleDateString('pt-BR', opcoes)
 }
 
