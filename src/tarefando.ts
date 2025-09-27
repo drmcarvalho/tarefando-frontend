@@ -7,7 +7,7 @@ import { map } from "lit/directives/map.js";
 const apiUrl: String = "https://localhost:7222/api/tasks"
 
 function formatDateToFullText(dataString: string): string {
-  const data = new Date(dataString);
+  const data = new Date(dataString)
   
   const opcoes: Intl.DateTimeFormatOptions = {
     weekday: 'long',
@@ -15,9 +15,9 @@ function formatDateToFullText(dataString: string): string {
     month: 'long',
     day: 'numeric',
     timeZone: 'America/Sao_Paulo'
-  };
+  }
   
-  return data.toLocaleDateString('pt-BR', opcoes);
+  return data.toLocaleDateString('pt-BR', opcoes)
 }
 
 function formatDate(dateString: string): string {
@@ -691,13 +691,45 @@ class MyTaskComponent extends LitElement {
             .btn {
                 width: 100%;
             }
+
+            .search-container {
+                display: flex;
+                align-items: center;
+                background-color: #404040;
+                border-radius: 6px;
+                padding: 8px 12px;
+                transition: background-color 0.2s;
+            }
+
+            .search-container:focus-within {
+                background-color: #4a4a4a;
+            }
+
+            .search-input {
+                background: none;
+                border: none;
+                color: #fff;
+                font-size: 14px;
+                outline: none;
+                width: 200px;
+            }
+
+            .search-input::placeholder {
+                color: #999;
+            }
+
+            .search-icon {
+                color: #999;
+                font-size: 16px;
+                margin-right: 8px;
+            }
         }
     `
 
     @property({ type: Boolean }) isGroupedByDay = false    
-    @property({ type: Boolean }) showModal = false
-    @property({ type: String }) taskTitle  = null
-    @property({ type: String}) taskDescription = null
+    @property({ type: Boolean }) showModal = false    
+    @property({ type: String }) taskTitle = ""    
+    @property({ type: String }) taskDescription = ""
     @property({ type: String }) taskTypeSelectedValue = ""
 
     _myTasks = new Task(this, {        
@@ -717,29 +749,27 @@ class MyTaskComponent extends LitElement {
     })    
 
     _showTaskModal() {        
-        this.showModal = true
-        document.body.style.overflow = 'hidden';
-        document.getElementById('taskTitle')?.focus();
-    }
-
-    _clearFields() {
-        this.taskTitle = null
-        this.taskDescription = null
-        this.taskTypeSelectedValue = ""        
-    }
+        this.showModal = true        
+        document.body.style.overflow = 'hidden'        
+        document.getElementById('taskTitle')?.focus()
+    }    
 
     _handleSelectChange(e: Event) {
         this.taskTypeSelectedValue = (e.target as HTMLInputElement).value        
     }
 
-    _closeTaskModal() {
-        this.showModal = false
-        this._clearFields()
+    _closeTaskModal(e: Event) {        
+        this.taskTitle = ""
+        this.taskDescription = ""
+        this.taskTypeSelectedValue = ""
+        const form = (e.target as HTMLButtonElement).form as HTMLFormElement
+        form.reset()
+        this.showModal = false        
         document.body.style.overflow = 'auto'
         const preview = document.getElementById('taskTypePreview')
         if (preview) {
             preview.style.display = 'none'
-        }        
+        }
     }
 
     _spanCheckBoxHandleClick() {
@@ -768,6 +798,20 @@ class MyTaskComponent extends LitElement {
         dayGroup?.classList.toggle('collapsed')        
     }
 
+    _handleSubmitForm(e: Event) {        
+        const form = e.target as HTMLFormElement               
+        const formData = new FormData(form)                
+        const formValues = Object.fromEntries(formData.entries())
+        if (!formValues.taskTitle) {
+            alert('Campo titulo é obrigatório')
+            e.preventDefault()
+        }
+        if (!formValues.taskType) {
+            alert('Selecione o tipo da tarefa')
+            e.preventDefault()
+        }
+    }
+
     _template(item: any) {
         if (!item || !item.length) {
             return html`<p>Não existem tarefas para exibir</p>`
@@ -777,20 +821,18 @@ class MyTaskComponent extends LitElement {
             <div id="taskModal" class="modal ${this.showModal ? 'show' : ''}">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title">✨ Nova Tarefa</h2>
-                        <button class="close-btn" @click="${this._closeTaskModal}">&times;</button>
+                        <h2 class="modal-title">Nova Tarefa</h2>                        
                     </div>
                     
-                    <form id="addTaskForm">
+                    <form id="taskForm" @submit="${this._handleSubmitForm}">
                         <div class="form-group">
                             <label class="form-label" for="taskTitle">Título *</label>
                             <input 
-                                .value="${this.taskTitle}"
-                                type="text" 
+                                .value="${this.taskTitle}"                                
                                 id="taskTitle" 
                                 class="form-input" 
                                 placeholder="Digite o título da tarefa..."
-                                required
+                                name="taskTitle"
                             >
                         </div>
 
@@ -799,15 +841,16 @@ class MyTaskComponent extends LitElement {
                             <textarea 
                                 .value="${this.taskDescription}"
                                 id="taskDescription" 
-                                class="form-textarea" 
+                                class="form-textarea"                                
                                 placeholder="Descreva os detalhes da tarefa... (opcional)"
                                 rows="3"
+                                name="taskDescription"
                             ></textarea>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="taskType">Tipo da Tarefa *</label>
-                            <select .value="${this.taskTypeSelectedValue}" id="taskType" class="form-select" @change="${this._handleSelectChange}" required>
+                            <select .value="${this.taskTypeSelectedValue}" id="taskType" class="form-select" name="taskType" @change="${this._handleSelectChange}">
                                 <option value="">Selecione o tipo da tarefa...</option>
                                 <option value="0">Urgente</option>
                                 <option value="1">Normal</option>
@@ -878,8 +921,7 @@ class MyTaskComponent extends LitElement {
                                 <div class="task-details">
                                     <div class="task-title">${t.title}</div>
                                     <div class="task-description">${t.description}</div>
-                                    <div class="task-date">${formatDate(t.createdAt)}</div>
-                                    <div class="task-description">${t.taskTypeString}</div>
+                                    <div class="task-date">${formatDate(t.createdAt)}</div>                                    
                                 </div>
                                 ${t.isCaceled ? html`<div class="status-badge status-cancelled">Cancelada</div>` : !t.isCompleted ? html`<div class="status-badge status-pending">Pendente</div>` : html`<div class="status-badge status-completed">Completa</div>`}
                             </div>
@@ -930,7 +972,11 @@ class MyTaskComponent extends LitElement {
         const header = html`
         <div class="header">
             <h1>TAREFAS</h1>
-            <div class="header-controls">
+            <div class="header-controls">                
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Buscar tarefas..." id="searchInput" oninput="searchTasks()">
+                </div>
                 <div class="group-toggle" .value="${this.isGroupedByDay}" @click="${this._spanCheckBoxHandleClick}">
                     <div class="checkbox ${this.isGroupedByDay ? "checked" : ''}"></div>
                     <span>Agrupar por dia</span>
@@ -949,7 +995,7 @@ class MyTaskComponent extends LitElement {
             },
             error: (e) => html`<p>Error: ${e}</p>`
         })
-    }    
+    }
 }
 
 window.customElements.define('tarefando-app', MyTaskComponent)
