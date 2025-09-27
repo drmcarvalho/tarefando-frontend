@@ -921,6 +921,12 @@ class MyTaskComponent extends LitElement {
         }
     }
 
+    _handleClickToggleDayGroup(e: Event) {        
+        const target = e.currentTarget as HTMLElement
+        const dayGroup = target.parentNode as HTMLElement
+        dayGroup?.classList.toggle('collapsed')        
+    }
+
     render() {
         const header = html`
         <div class="header">
@@ -943,12 +949,6 @@ class MyTaskComponent extends LitElement {
             },
             error: (e) => html`<p>Error: ${e}</p>`
         })
-    }    
-    
-    _handleClickToggleDayGroup(e: Event) {        
-        const target = e.currentTarget as HTMLElement
-        const dayGroup = target.parentNode as HTMLElement
-        dayGroup?.classList.toggle('collapsed')        
     }    
 }
 
