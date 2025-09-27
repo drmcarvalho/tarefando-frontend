@@ -20,9 +20,18 @@ function formatDateToFullText(dataString: string): string {
   return data.toLocaleDateString('pt-BR', opcoes);
 }
 
+function formatDate(dateString: string): string {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('pt-BR', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short'
+    })
+}
+
 class MyTaskComponent extends LitElement {
     static styles? = css`
-    * {
+            * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -141,8 +150,8 @@ class MyTaskComponent extends LitElement {
 
         /* Estilos para modo não agrupado */
         .flat-container {
-            background-color: #2d2d2d;
-            
+            margin-bottom: 20px;
+            background-color: #2d2d2d;            
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
@@ -161,6 +170,38 @@ class MyTaskComponent extends LitElement {
             position: relative;
         }
 
+        .task-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--task-color);
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* Cores por tipo de tarefa */
+        .task-item[data-type="urgent"]::before {
+            --task-color: #ff4757;
+        }
+
+        .task-item[data-type="normal"]::before {
+            --task-color: #c0c0c0;
+        }
+
+        .task-item[data-type="teamAlignment"]::before {
+            --task-color: #2ed573;
+        }
+
+        .task-item[data-type="training"]::before {
+            --task-color: #3742fa;
+        }
+
+        .task-item[data-type="administrative"]::before {
+            --task-color: #ffa502;
+        }
+
         .task-item:hover {
             background-color: #353535;
         }
@@ -174,6 +215,7 @@ class MyTaskComponent extends LitElement {
             display: flex;
             align-items: center;
             gap: 15px;
+            margin-left: 8px; /* Espaço para a linha colorida */
         }
 
         .task-icon {
@@ -210,10 +252,6 @@ class MyTaskComponent extends LitElement {
             color: #00d4aa;
             margin-top: 4px;
             font-weight: 500;
-        }
-
-        .flat-mode {
-            background-color: #1a1a1a;
         }
 
         .task-actions {
@@ -344,11 +382,63 @@ class MyTaskComponent extends LitElement {
             display: none;
         }
 
+        /* Legenda de cores - ajuste de posicionamento */
+        .legend {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Garantir que ambos os containers tenham o mesmo espaçamento do header */
+        .grouped-mode .legend {
+            margin-top: 0;
+        }
+
+        .flat-mode .legend {
+            margin-top: 0;
+        }
+
+        .legend h3 {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .legend-color.urgent { background-color: #ff4757; }
+        .legend-color.normal { background-color: #c0c0c0; }
+        .legend-color.team { background-color: #2ed573; }
+        .legend-color.training { background-color: #3742fa; }
+        .legend-color.admin { background-color: #ffa502; }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
-            }
-            
+            }                        
+
             .task-item {
                 padding: 15px;
                 flex-direction: column;
@@ -373,6 +463,10 @@ class MyTaskComponent extends LitElement {
             .group-toggle {
                 font-size: 12px;
             }
+
+            .legend-items {
+                justify-content: center;
+            }
         }
     `
 
@@ -392,15 +486,44 @@ class MyTaskComponent extends LitElement {
             }
         },
         args: () => []
-    })
+    })    
 
     _template(item: any) {
         if (!item || !item.length) {
             return html`<p>Não existem tarefas para exibir</p>`
-        }
+        }        
+        const colorLegend = html`
+            <!-- Legenda de cores -->
+            <div class="legend">
+                <h3>Tipos de Tarefas</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color urgent"></div>
+                        <span>Urgente</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color normal"></div>
+                        <span>Normal</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color team"></div>
+                        <span>Alinhamento de Equipe</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color training"></div>
+                        <span>Treinamento</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color admin"></div>
+                        <span>Administrativo</span>
+                    </div>
+                </div>
+            </div>
+        `
         if (this.isGroupedByDay) {            
             return html`
-                <div class="container" id="tasks-grouped">
+                <div class="container" id="tasks-grouped">                    
+                    ${colorLegend}
                     ${map(item, (g: any) => html`
                     <div class="day-group">
                         <div class="day-header" @click="${this._handleClickToggleDayGroup}">
@@ -410,7 +533,7 @@ class MyTaskComponent extends LitElement {
                         </div>
                         <div class="tasks-list">
                             ${map(g.tasks, (t: any) => html`
-                                <div class="task-item" data-status="pending">
+                                <div class="task-item" data-type="${t.taskTypeString}">
                                 <div class="task-content">                                        
                                     <div class="task-details">
                                         <div class="task-title">${t.title}</div>
@@ -421,7 +544,7 @@ class MyTaskComponent extends LitElement {
                                 <div class="task-actions">
                                     <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
                                     <button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>
-                                    <button class="action-btn btn-cancel" onclick="cancelTask(this)">Cancelar</button>
+                                    <button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>
                                 </div>
                             </div>
                             `)}
@@ -434,20 +557,23 @@ class MyTaskComponent extends LitElement {
         else {            
             return html`
                 <div class="flat-container" id="task-list-no-grouped">
+                    ${colorLegend}
                     <div class="tasks-list">
                         ${map(item, (t: any) => html`
-                            <div class="task-item" data-status="pending">
-                            <div class="task-content">                                        
+                            <div class="task-item" data-type="${t.taskTypeString}">
+                            <div class="task-content">
                                 <div class="task-details">
                                     <div class="task-title">${t.title}</div>
-                                    <div class="task-description">${t.description}</div>                                        
-                                </div>                                        
+                                    <div class="task-description">${t.description}</div>
+                                    <div class="task-date">${formatDate(t.createdAt)}</div>
+                                    <div class="task-description">${t.taskTypeString}</div>
+                                </div>
                                 ${t.isCaceled ? html`<div class="status-badge status-cancelled">Cancelada</div>` : !t.isCompleted ? html`<div class="status-badge status-pending">Pendente</div>` : html`<div class="status-badge status-completed">Completa</div>`}
                             </div>
                             <div class="task-actions">
                                 <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
                                 <button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>
-                                <button class="action-btn btn-cancel" onclick="cancelTask(this)">Cancelar</button>
+                                <button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>
                             </div>
                         </div>
                         `)}
@@ -460,6 +586,21 @@ class MyTaskComponent extends LitElement {
     _spanCheckBoxHandleClick() {
         this.isGroupedByDay = !this.isGroupedByDay
         this._myTasks.run()
+    }
+
+    async _cancelHandleClick(e: Event) {        
+        try {
+            const target = e.currentTarget as HTMLElement
+            const id = target?.getAttribute('id')
+            const response = await fetch(`${apiUrl}/cancel/${id}`, {method: 'PATCH'})
+            if (!response.ok) {
+                alert('Erro ao cancelar tarefa')
+            }
+            this._myTasks.run()
+        }
+        catch (err) {
+            console.log(err)
+        }
     }
 
     render() {
