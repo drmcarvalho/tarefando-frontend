@@ -519,6 +519,7 @@ class MyTaskComponent extends LitElement {
                     </div>
                 </div>
             </div>
+            <button class="add-task-btn" onclick="addTask()">+</button>
         `
         if (this.isGroupedByDay) {            
             return html`
@@ -543,8 +544,8 @@ class MyTaskComponent extends LitElement {
                                 </div>
                                 <div class="task-actions">
                                     <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
-                                    <button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>
-                                    ${!t.isCaceled ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
+                                    ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>`}
+                                    ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                                 </div>
                             </div>
                             `)}
@@ -552,6 +553,7 @@ class MyTaskComponent extends LitElement {
                     </div>
                     `)}
                 </div>
+                <button class="add-task-btn" onclick="addTask()">+</button>
             `
         }
         else {            
@@ -572,8 +574,8 @@ class MyTaskComponent extends LitElement {
                             </div>
                             <div class="task-actions">
                                 <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
-                                <button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>
-                                ${!t.isCaceled ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
+                                ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>`}
+                                ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                             </div>
                         </div>
                         `)}
