@@ -824,7 +824,7 @@ class MyTaskComponent extends LitElement {
             this.taskTitle = content?.title
             this.taskDescription = content?.description
             this.idTask = content?.id
-            this.taskTypeSelectedValue = content?.taskType            
+            this.taskTypeSelectedValue = content?.taskType
             this.isEditMode = true
             this._showTaskModal()
         }
