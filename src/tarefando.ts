@@ -830,7 +830,7 @@ class MyTaskComponent extends LitElement {
         }
         catch (err) {
             console.log(err)
-        }        
+        }
     }
 
     _handleClickToggleDayGroup(e: Event) {        
