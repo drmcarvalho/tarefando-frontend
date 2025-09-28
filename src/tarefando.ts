@@ -769,7 +769,7 @@ class MyTaskComponent extends LitElement {
         const modal = document.getElementById('taskModal')
         modal?.classList.remove('show')
         document.body.style.overflow = 'auto'
-        //this.isEditMode = false
+        this.isEditMode = false
         const preview = document.getElementById('taskTypePreview')
         if (preview) {
             preview.style.display = 'none'
