@@ -811,8 +811,7 @@ class MyTaskComponent extends LitElement {
         }
     }
 
-    async _viewHandleClick(e: Event) {
-        this.isEditMode = true
+    async _viewHandleClick(e: Event) {        
         try {
             const target = e.currentTarget as HTMLElement
             const id = target?.getAttribute('id')
@@ -825,7 +824,8 @@ class MyTaskComponent extends LitElement {
             this.taskTitle = content?.title
             this.taskDescription = content?.description
             this.idTask = content?.id
-            this.taskTypeSelectedValue = content?.taskType
+            this.taskTypeSelectedValue = content?.taskType            
+            this.isEditMode = true
             this._showTaskModal()
         }
         catch (err) {
