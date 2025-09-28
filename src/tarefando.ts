@@ -725,6 +725,7 @@ class MyTaskComponent extends LitElement {
 
     @property({ type: Boolean }) isGroupedByDay = false    
     @property({ type: Boolean }) showModal = false    
+    @property({ type: Number }) idTask = 0
     @property({ type: String }) taskTitle = ""    
     @property({ type: String }) taskDescription = ""
     @property({ type: String }) taskTypeSelectedValue = ""
@@ -808,6 +809,28 @@ class MyTaskComponent extends LitElement {
         catch (err) {
             console.log(err)
         }
+    }
+
+    async _viewHandleClick(e: Event) {
+        this.isEditMode = true
+        try {
+            const target = e.currentTarget as HTMLElement
+            const id = target?.getAttribute('id')
+            const response = await fetch(`${apiUrl}/${id}`)
+            if (!response.ok) {
+                alert('Erro ao visualizar tarefa')
+                return
+            }
+            const content = await response.json()
+            this.taskTitle = content?.title
+            this.taskDescription = content?.description
+            this.idTask = content?.id
+            this.taskTypeSelectedValue = content?.taskType
+            this._showTaskModal()
+        }
+        catch (err) {
+            console.log(err)
+        }        
     }
 
     _handleClickToggleDayGroup(e: Event) {        
@@ -922,7 +945,7 @@ class MyTaskComponent extends LitElement {
                                     ${t.isCaceled ? html`<div class="status-badge status-cancelled">Cancelada</div>` : !t.isCompleted ? html`<div class="status-badge status-pending">Pendente</div>` : html`<div class="status-badge status-completed">Completa</div>`}
                                 </div>
                                 <div class="task-actions">
-                                    <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
+                                    <button class="action-btn btn-view" @click="${this._viewHandleClick}" id="${t.id}">Ver</button>
                                     ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" @click="${this._completeTaskHandleClick}" id="${t.id}">Concluir</button>`}
                                     ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelTaskHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                                 </div>
@@ -951,7 +974,7 @@ class MyTaskComponent extends LitElement {
                                 ${t.isCaceled ? html`<div class="status-badge status-cancelled">Cancelada</div>` : !t.isCompleted ? html`<div class="status-badge status-pending">Pendente</div>` : html`<div class="status-badge status-completed">Completa</div>`}
                             </div>
                             <div class="task-actions">
-                                <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
+                                <button class="action-btn btn-view" @click="${this._viewHandleClick}" id="${t.id}">Ver</button>
                                 ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>`}
                                 ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelTaskHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                             </div>
