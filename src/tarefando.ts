@@ -728,6 +728,7 @@ class MyTaskComponent extends LitElement {
     @property({ type: String }) taskTitle = ""    
     @property({ type: String }) taskDescription = ""
     @property({ type: String }) taskTypeSelectedValue = ""
+    @property({ type: Boolean }) isEditMode = false
 
     _myTasks = new Task(this, {        
         task: async([], {signal}) => {
@@ -747,9 +748,11 @@ class MyTaskComponent extends LitElement {
 
     _showTaskModal() {        
         this.showModal = true        
+        const modal = document.getElementById('taskModal')
+        modal?.classList.add('show')        
         document.body.style.overflow = 'hidden'        
-        document.getElementById('taskTitle')?.focus()
-    }    
+        document.getElementById('taskTitle')?.focus()        
+    }
 
     _handleSelectChange(e: Event) {
         this.taskTypeSelectedValue = (e.target as HTMLInputElement).value        
@@ -761,12 +764,15 @@ class MyTaskComponent extends LitElement {
         this.taskTypeSelectedValue = ""
         const form = (e.target as HTMLButtonElement).form as HTMLFormElement
         form.reset()
-        this.showModal = false        
+        this.showModal = false
+        const modal = document.getElementById('taskModal')
+        modal?.classList.remove('show')
         document.body.style.overflow = 'auto'
+        //this.isEditMode = false
         const preview = document.getElementById('taskTypePreview')
         if (preview) {
             preview.style.display = 'none'
-        }
+        }        
     }
 
     _spanCheckBoxHandleClick() {
@@ -774,11 +780,26 @@ class MyTaskComponent extends LitElement {
         this._myTasks.run()
     }
 
-    async _cancelHandleClick(e: Event) {        
+    async _completeTaskHandleClick(e: Event) {
         try {
             const target = e.currentTarget as HTMLElement
             const id = target?.getAttribute('id')
-            const response = await fetch(`${apiUrl}/cancel/${id}`, {method: 'PATCH'})
+            const response = await fetch(`${apiUrl}/complete/${id}`, { method: 'PATCH' })
+            if (!response.ok) {
+                alert('Erro ao completar tarefa')
+            }
+            this._myTasks.run()
+        }
+        catch (err) {
+            console.log(err)
+        }
+    }
+
+    async _cancelTaskHandleClick(e: Event) {        
+        try {
+            const target = e.currentTarget as HTMLElement
+            const id = target?.getAttribute('id')
+            const response = await fetch(`${apiUrl}/cancel/${id}`, { method: 'PATCH' })
             if (!response.ok) {
                 alert('Erro ao cancelar tarefa')
             }
@@ -807,15 +828,22 @@ class MyTaskComponent extends LitElement {
             alert('Selecione o tipo da tarefa')
             e.preventDefault()
         }
+        if (this.isEditMode) {
+            console.log('Modo edição')
+        }
+        else {
+            console.log('Modo inserção')
+        }
+        this.isEditMode = false
     }
 
     _template(item: any) {
         if (!item || !item.length) {
             return html`<p>Não existem tarefas para exibir</p>`
-        }
+        }        
         const addTask = html`<button class="add-task-btn" @click="${this._showTaskModal}">+</button>`
         const taskModal = html`     
-            <div id="taskModal" class="modal ${this.showModal ? 'show' : ''}">
+            <div id="taskModal" class="modal ${this.showModal ? 'show': ''}">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2 class="modal-title">Nova Tarefa</h2>                        
@@ -895,8 +923,8 @@ class MyTaskComponent extends LitElement {
                                 </div>
                                 <div class="task-actions">
                                     <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
-                                    ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>`}
-                                    ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
+                                    ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" @click="${this._completeTaskHandleClick}" id="${t.id}">Concluir</button>`}
+                                    ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelTaskHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                                 </div>
                             </div>
                             `)}
@@ -925,7 +953,7 @@ class MyTaskComponent extends LitElement {
                             <div class="task-actions">
                                 <button class="action-btn btn-view" onclick="viewTask(this)">Ver</button>
                                 ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>`}
-                                ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelHandleClick}" id="${t.id}">Cancelar</button>` : ''}
+                                ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelTaskHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                             </div>
                         </div>
                         `)}
