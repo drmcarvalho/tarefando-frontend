@@ -871,7 +871,8 @@ class MyTaskComponent extends LitElement {
                 )
                 if (!response.ok) {
                     alert('Erro ao efetuar alterção de tarefa')
-                    e.preventDefault()                    
+                    e.preventDefault()
+                    return
                 }
             }
             catch(err) {                
@@ -895,9 +896,9 @@ class MyTaskComponent extends LitElement {
                 )
                 if (!response.ok) {
                     alert('Erro ao efetuar cadastro de tarefa')
-                    e.preventDefault()                    
-                }
-                console.log('teste cadastro')
+                    e.preventDefault()
+                    return
+                }                
             }
             catch(err) {                
                 console.log(err)
