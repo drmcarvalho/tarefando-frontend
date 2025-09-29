@@ -31,7 +31,7 @@ class MyTaskComponent extends LitElement {
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            box-sizing: border-box;            
         }
 
         body {
@@ -39,7 +39,7 @@ class MyTaskComponent extends LitElement {
             background-color: #1a1a1a;
             color: #ffffff;
             min-height: 100vh;
-        }
+        }        
 
         .header {
             background-color: #2d2d2d;
@@ -911,10 +911,10 @@ class MyTaskComponent extends LitElement {
     }
 
     _template(item: any) {
-        if (!item || !item.length) {
-            return html`<p>Não existem tarefas para exibir</p>`
-        }        
         const addTask = html`<button class="add-task-btn" @click="${this._showTaskModal}">+</button>`
+        if (!item || !item.length) {
+            return html`<p>Não existem tarefas para exibir</p>${addTask}`
+        }                
         const taskModal = html`     
             <div id="taskModal" class="modal ${this.showModal ? 'show': ''}">
                 <div class="modal-content">
