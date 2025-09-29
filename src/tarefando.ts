@@ -153,6 +153,7 @@ class MyTaskComponent extends LitElement {
             max-width: 800px;
             background-color: #2d2d2d;
             border-radius: 12px;
+            scroll;
         }
 
         .tasks-list {
