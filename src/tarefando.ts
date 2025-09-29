@@ -839,25 +839,74 @@ class MyTaskComponent extends LitElement {
         dayGroup?.classList.toggle('collapsed')        
     }
 
-    _handleSubmitForm(e: Event) {        
+    async _handleSubmitForm(e: Event) {
+        e.preventDefault()
         const form = e.target as HTMLFormElement               
         const formData = new FormData(form)                
         const formValues = Object.fromEntries(formData.entries())
-        if (!formValues.taskTitle) {
+        if (!formValues.title) {
             alert('Campo titulo é obrigatório')
             e.preventDefault()
+            return
         }
         if (!formValues.taskType) {
             alert('Selecione o tipo da tarefa')
             e.preventDefault()
+            return
         }
-        if (this.isEditMode) {
-            console.log('Modo edição')
+        if (this.isEditMode && this.idTask > 0) {
+            try {
+                const response = await fetch(`${apiUrl}/${this.idTask}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                                "title": formValues.title,
+                                "taskType": Number(formValues.taskType),
+                                "description": formValues.description
+                            }
+                        ),
+                        headers: {
+                            "Content-Type": "application/json",
+                        }
+                    }
+                )
+                if (!response.ok) {
+                    alert('Erro ao efetuar alterção de tarefa')
+                    e.preventDefault()                    
+                }
+            }
+            catch(err) {                
+                console.log(err)
+            }
         }
         else {
-            console.log('Modo inserção')
+            try {
+                const response = await fetch(`${apiUrl}`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                                "title": formValues.title,
+                                "taskType": Number(formValues.taskType),
+                                "description": formValues.description
+                            }
+                        ),
+                        headers: {
+                            "Content-Type": "application/json",
+                        }
+                    }
+                )
+                if (!response.ok) {
+                    alert('Erro ao efetuar cadastro de tarefa')
+                    e.preventDefault()                    
+                }
+                console.log('teste cadastro')
+            }
+            catch(err) {                
+                console.log(err)
+            }
         }
         this.isEditMode = false
+        this.idTask = 0
+        this.showModal = false
+        this._myTasks.run()
     }
 
     _template(item: any) {
@@ -880,7 +929,7 @@ class MyTaskComponent extends LitElement {
                                 id="taskTitle" 
                                 class="form-input" 
                                 placeholder="Digite o título da tarefa..."
-                                name="taskTitle"
+                                name="title"
                             >
                         </div>
 
@@ -892,7 +941,7 @@ class MyTaskComponent extends LitElement {
                                 class="form-textarea"                                
                                 placeholder="Descreva os detalhes da tarefa... (opcional)"
                                 rows="3"
-                                name="taskDescription"
+                                name="description"
                             ></textarea>
                         </div>
 
