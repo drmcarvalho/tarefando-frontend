@@ -401,6 +401,8 @@ class MyTaskComponent extends LitElement {
             margin-top: 0;
         }
 
+        .empty-message { color: white; }
+
         .legend h3 {
             font-size: 14px;
             color: #ccc;
@@ -917,9 +919,7 @@ class MyTaskComponent extends LitElement {
 
     _template(item: any) {
         const addTask = html`<button class="add-task-btn" @click="${this._showTaskModal}">+</button>`
-        if (!item || !item.length) {
-            return html`<p>Não existem tarefas para exibir</p>${addTask}`
-        }                
+                        
         const taskModal = html`     
             <div id="taskModal" class="modal ${this.showModal ? 'show': ''}">
                 <div class="modal-content">
@@ -979,6 +979,15 @@ class MyTaskComponent extends LitElement {
                 </div>
             </div>
         `
+
+        if (!item || !item.length) {
+            return html`
+                <p class="empty-message">Não existem tarefas para exibir</p>
+                ${addTask}
+                ${taskModal} 
+            `
+        }
+
         if (this.isGroupedByDay) {            
             return html`
                 <div class="container" id="tasks-grouped">
