@@ -3,7 +3,7 @@ import { LitElement, html, css } from "lit";
 import { property } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
 
-const apiUrl: String = "https://localhost:7222/api/tasks"
+const apiUrl: string = "http://localhost:5235/api/tasks"
 
 function formatDateToFullText(dataString: string): string {
   const data = new Date(dataString)  
@@ -27,7 +27,7 @@ function formatDate(dateString: string): string {
 }
 
 class MyTaskComponent extends LitElement {
-    static styles? = css`
+    static styles = css`
         * {
             margin: 0;
             padding: 0;
@@ -761,12 +761,14 @@ class MyTaskComponent extends LitElement {
         this.taskTypeSelectedValue = (e.target as HTMLInputElement).value        
     }
 
-    _closeTaskModal(e: Event) {        
+    _closeTaskModal(e: Event) {   
         this.taskTitle = ""
         this.taskDescription = ""
         this.taskTypeSelectedValue = ""
-        const form = (e.target as HTMLButtonElement).form as HTMLFormElement
-        form.reset()
+        const form = document.getElementById('taskForm') as HTMLFormElement | null
+        if (form){
+           form.reset() 
+        } 
         this.showModal = false
         const modal = document.getElementById('taskModal')
         modal?.classList.remove('show')
@@ -775,7 +777,7 @@ class MyTaskComponent extends LitElement {
         const preview = document.getElementById('taskTypePreview')
         if (preview) {
             preview.style.display = 'none'
-        }        
+        }      
     }
 
     _spanCheckBoxHandleClick() {
@@ -910,6 +912,7 @@ class MyTaskComponent extends LitElement {
         this.idTask = 0
         this.showModal = false
         this._myTasks.run()
+        this._closeTaskModal(e)
     }
 
     _template(item: any) {
