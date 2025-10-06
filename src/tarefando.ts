@@ -816,6 +816,20 @@ class MyTaskComponent extends LitElement {
 
     _spanCheckBoxHandleClick() {
         this.isGroupedByDay = !this.isGroupedByDay
+
+        if (this.searchTerm.trim()) {
+            const normalizedTasks = this._searchResults.flatMap(g => g.tasks ?? [g]).map(task => {
+                const rawDate = task.createdAt ?? task.date ?? task.created_at ?? task.timestamp ?? null
+                if (!rawDate) return task
+                const dateObj = (typeof rawDate === 'number') ? new Date(rawDate) : new Date(String(rawDate))
+                return {...task, createdAt: isNaN(dateObj.getTime()) ? null : dateObj.toISOString()}
+            })
+
+            this._searchResults = this.isGroupedByDay
+                ? this._groupTasksByDay(normalizedTasks)
+                : normalizedTasks
+        }
+
         this._myTasks.run()
     }
 
