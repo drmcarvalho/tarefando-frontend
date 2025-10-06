@@ -956,28 +956,34 @@ class MyTaskComponent extends LitElement {
     }
 
     async _fetchSearchResults() {
-        if (!this.searchTerm.trim()) {
+        const term = this.searchTerm.trim().toLowerCase()
+
+        if (!term) {
             this._searchResults = []
             this.requestUpdate()
             return
         }
 
         try {
-            const query = encodeURIComponent(this.searchTerm)
-            const url = `${apiUrl}/criteria?q=${query}&grouped=${this.isGroupedByDay}`
-            const response = await fetch(url)
+            const response = await fetch(`${apiUrl}/criteria?q=${encodeURIComponent(term)}`)
             if (!response.ok) throw new Error(`Erro na busca: ${response.status}`)
 
             const data = await response.json()
-            this._searchResults = this.isGroupedByDay
-                ? this._groupTasksByDay(data)
-                : data
+            const filtered = data.filter((t: any) => 
+                t.title?.toLowerCase().includes(term) || 
+                t.description?.toLowerCase().includes(term)
+            )
+
+            this._searchResults = this.isGroupedByDay 
+                ? this._groupTasksByDay(filtered)
+                : filtered
 
             this.requestUpdate()
         } catch (err) {
             console.error(err)
         }
     }
+
 
     _template(item: any) {
         const addTask = html`<button class="add-task-btn" @click="${this._showTaskModal}">+</button>`
@@ -1116,16 +1122,9 @@ class MyTaskComponent extends LitElement {
     }
 
     render() {
-        let itemsToRender
+        let itemsToRender = this.searchTerm.trim() ? this._searchResults : this._myTasks.value || []
 
-        if (this.searchTerm.trim()) {
-            itemsToRender = this._searchResults
-        }
-        else {
-            itemsToRender = this._myTasks.value || []
-        }
-
-        if (this.isGroupedByDay && Array.isArray(itemsToRender) && !itemsToRender[0]?.day) {
+        if (this.isGroupedByDay && !this.searchTerm.trim() && Array.isArray(itemsToRender) && !itemsToRender[0]?.day) {
             itemsToRender = this._groupTasksByDay(itemsToRender)
         }
 
