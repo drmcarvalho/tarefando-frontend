@@ -727,7 +727,9 @@ class MyTaskComponent extends LitElement {
         }
     `
 
-    @property({ type: Boolean }) isGroupedByDay = false    
+    @property({ type: Boolean }) isGroupedByDay = false 
+    @property({ type: String }) searchTerm = ""   
+    @property({ type: Array }) _searchResults: any[] = []
     @property({ type: Boolean }) showModal = false    
     @property({ type: Number }) idTask = 0
     @property({ type: String }) taskTitle = ""    
@@ -763,14 +765,44 @@ class MyTaskComponent extends LitElement {
         this.taskTypeSelectedValue = (e.target as HTMLInputElement).value        
     }
 
+    _handleSearchInput(e: Event) {
+        const target = e.target as HTMLInputElement
+        this.searchTerm = target.value
+        this._fetchSearchResults()
+    }
+
+     _groupTasksByDay(tasks: any[]) {
+        const grouped: any[] = []
+        const map = new Map<string, any[]>()
+
+        tasks.forEach(task => {
+            const rawDate = task.createdAt ?? task.date ?? task.created_at ?? task.timestamp ?? null
+            if (!rawDate) return
+            const dateObj = (typeof rawDate === 'number') ? new Date(rawDate) : new Date(String(rawDate))
+            if (isNaN(dateObj.getTime())) return
+            const day = dateObj.toISOString().split('T')[0]
+            if (!map.has(day)) {
+                map.set(day, [])
+            }
+            map.get(day)!.push(task)
+        })
+
+        map.forEach((tasksForDay, day) => {
+            grouped.push({ day, tasks: tasksForDay })
+        })
+
+        grouped.sort((a, b) => (a.day < b.day ? 1 : -1))
+
+        return grouped
+    }
+
     _closeTaskModal(e: Event) {   
         this.taskTitle = ""
         this.taskDescription = ""
         this.taskTypeSelectedValue = ""
-        const form = document.getElementById('taskForm') as HTMLFormElement | null
-        if (form){
-           form.reset() 
-        } 
+        
+        this.requestUpdate()
+
         this.showModal = false
         const modal = document.getElementById('taskModal')
         modal?.classList.remove('show')
@@ -910,11 +942,41 @@ class MyTaskComponent extends LitElement {
                 console.log(err)
             }
         }
+
+        this._closeTaskModal(e)
+
         this.isEditMode = false
         this.idTask = 0
         this.showModal = false
-        this._myTasks.run()
-        this._closeTaskModal(e)
+        this.searchTerm = ""
+        this._searchResults = []
+        await this._myTasks.run()
+        
+        
+    }
+
+    async _fetchSearchResults() {
+        if (!this.searchTerm.trim()) {
+            this._searchResults = []
+            this.requestUpdate()
+            return
+        }
+
+        try {
+            const query = encodeURIComponent(this.searchTerm)
+            const url = `${apiUrl}/criteria?q=${query}&grouped=${this.isGroupedByDay}`
+            const response = await fetch(url)
+            if (!response.ok) throw new Error(`Erro na busca: ${response.status}`)
+
+            const data = await response.json()
+            this._searchResults = this.isGroupedByDay
+                ? this._groupTasksByDay(data)
+                : data
+
+            this.requestUpdate()
+        } catch (err) {
+            console.error(err)
+        }
     }
 
     _template(item: any) {
@@ -930,24 +992,25 @@ class MyTaskComponent extends LitElement {
                     <form id="taskForm" @submit="${this._handleSubmitForm}">
                         <div class="form-group">
                             <label class="form-label" for="taskTitle">Título *</label>
-                            <input 
-                                .value="${this.taskTitle}"                                
-                                id="taskTitle" 
-                                class="form-input" 
-                                placeholder="Digite o título da tarefa..."
+                            <input
+                                id="taskTitle"
+                                class="form-input"
                                 name="title"
+                                .value="${this.taskTitle}"
+                                @input="${(e: Event) => this.taskTitle = (e.target as HTMLInputElement).value}"
+                                placeholder="Digite o título da tarefa..."
                             >
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="taskDescription">Descrição</label>
-                            <textarea 
-                                .value="${this.taskDescription}"
-                                id="taskDescription" 
-                                class="form-textarea"                                
-                                placeholder="Descreva os detalhes da tarefa... (opcional)"
-                                rows="3"
+                            <textarea
+                                id="taskDescription"
+                                class="form-textarea"
                                 name="description"
+                                .value="${this.taskDescription}"
+                                @input="${(e: Event) => this.taskDescription = (e.target as HTMLTextAreaElement).value}"
+                                placeholder="Descreva os detalhes da tarefa..."
                             ></textarea>
                         </div>
 
@@ -1039,7 +1102,7 @@ class MyTaskComponent extends LitElement {
                             </div>
                             <div class="task-actions">
                                 <button class="action-btn btn-view" @click="${this._viewHandleClick}" id="${t.id}">Ver</button>
-                                ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" onclick="completeTask(this)">Concluir</button>`}
+                                ${(t.isCaceled || t.isCompleted) ? '' : html` <button class="action-btn btn-complete" @click="${this._completeTaskHandleClick}" id="${t.id}">Concluir</button>`}
                                 ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelTaskHandleClick}" id="${t.id}">Cancelar</button>` : ''}
                             </div>
                         </div>
@@ -1053,6 +1116,21 @@ class MyTaskComponent extends LitElement {
     }
 
     render() {
+        let itemsToRender
+
+        if (this.searchTerm.trim()) {
+            itemsToRender = this._searchResults
+        }
+        else {
+            itemsToRender = this._myTasks.value || []
+        }
+
+        if (this.isGroupedByDay && Array.isArray(itemsToRender) && !itemsToRender[0]?.day) {
+            itemsToRender = this._groupTasksByDay(itemsToRender)
+        }
+
+        if (!itemsToRender) itemsToRender = []
+
         const colorLegend = html`
             <!-- Legenda de cores -->
             <div class="legend">
@@ -1087,7 +1165,7 @@ class MyTaskComponent extends LitElement {
             <div class="header-controls">                
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" placeholder="Buscar tarefas..." id="searchInput" oninput="searchTasks()">
+                    <input type="text" class="search-input" placeholder="Buscar tarefas..." @input="${this._handleSearchInput}">
                 </div>
                 <div class="group-toggle" .value="${this.isGroupedByDay}" @click="${this._spanCheckBoxHandleClick}">
                     <div class="checkbox ${this.isGroupedByDay ? "checked" : ''}"></div>
@@ -1100,13 +1178,8 @@ class MyTaskComponent extends LitElement {
         </div>
         ${colorLegend}
         `
-        return this._myTasks.render({
-            pending: () => html`${header}<p>Buscando tarefas...</p>`,
-            complete: (item) => {                
-                return html`${header}${this._template(item)}`
-            },
-            error: (e) => html`<p>Error: ${e}</p>`
-        })
+        
+        return html`${header}${this._template(itemsToRender)}`
     }
 }
 
