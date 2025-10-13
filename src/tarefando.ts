@@ -835,31 +835,65 @@ class MyTaskComponent extends LitElement {
 
     async _completeTaskHandleClick(e: Event) {
         try {
-            const target = e.currentTarget as HTMLElement
-            const id = target?.getAttribute('id')
-            const response = await fetch(`${apiUrl}/complete/${id}`, { method: 'PATCH' })
+            const target = e.currentTarget as HTMLElement;
+            const id = target?.getAttribute('id');
+            if (!id) return;
+
+            const response = await fetch(`${apiUrl}/complete/${id}`, { method: 'PATCH' });
             if (!response.ok) {
-                alert('Erro ao completar tarefa')
+                alert('Erro ao completar tarefa');
+                return;
             }
-            this._myTasks.run()
-        }
-        catch (err) {
-            console.log(err)
+
+            this._searchResults = this._searchResults.map(taskOrGroup => {
+                if (this.isGroupedByDay && taskOrGroup.tasks) {
+                    taskOrGroup.tasks = taskOrGroup.tasks.map((t: any) => {
+                        if (String(t.id) === id) t.isCompleted = true;
+                        return t;
+                    });
+                } else if (!this.isGroupedByDay && String(taskOrGroup.id) === id) {
+                    taskOrGroup.isCompleted = true;
+                }
+                return taskOrGroup;
+            });
+
+            this.requestUpdate();
+            this._myTasks.run();
+
+        } catch (err) {
+            console.log(err);
         }
     }
 
+
     async _cancelTaskHandleClick(e: Event) {        
         try {
-            const target = e.currentTarget as HTMLElement
-            const id = target?.getAttribute('id')
-            const response = await fetch(`${apiUrl}/cancel/${id}`, { method: 'PATCH' })
+            const target = e.currentTarget as HTMLElement;
+            const id = target?.getAttribute('id');
+            if (!id) return;
+
+            const response = await fetch(`${apiUrl}/cancel/${id}`, { method: 'PATCH' });
             if (!response.ok) {
-                alert('Erro ao cancelar tarefa')
+                alert('Erro ao cancelar tarefa');
+                return;
             }
-            this._myTasks.run()
-        }
-        catch (err) {
-            console.log(err)
+            this._searchResults = this._searchResults.map(taskOrGroup => {
+                if (this.isGroupedByDay && taskOrGroup.tasks) {
+                    taskOrGroup.tasks = taskOrGroup.tasks.map((t: any) => {
+                        if (String(t.id) === id) t.isCaceled = true;
+                        return t;
+                    });
+                } else if (!this.isGroupedByDay && String(taskOrGroup.id) === id) {
+                    taskOrGroup.isCaceled = true;
+                }
+                return taskOrGroup;
+            });
+
+            this.requestUpdate();
+            this._myTasks.run();
+
+        } catch (err) {
+            console.log(err);
         }
     }
 
