@@ -835,7 +835,7 @@ class MyTaskComponent extends LitElement {
         return grouped
     }
 
-    _closeTaskModal(e: Event) {   
+    _closeTaskModal() {   
         this.taskTitle = ""
         this.taskDescription = ""
         this.taskTypeSelectedValue = ""
