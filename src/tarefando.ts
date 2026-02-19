@@ -1032,7 +1032,7 @@ class MyTaskComponent extends LitElement {
             }
         }
 
-        this._closeTaskModal(e)
+        this._closeTaskModal()
 
         this.isEditMode = false
         this.idTask = 0
