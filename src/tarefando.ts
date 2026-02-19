@@ -105,6 +105,29 @@ class MyTaskComponent extends LitElement {
             color: #999;
         }
 
+        .pending-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #3a3a3a;
+            border: 1px solid #555;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .pending-badge .pending-count {
+            background-color: #f0a500;
+            color: #1a1a1a;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 10px;
+            padding: 1px 7px;
+            min-width: 20px;
+            text-align: center;
+        }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -736,6 +759,7 @@ class MyTaskComponent extends LitElement {
     @property({ type: String }) taskDescription = ""
     @property({ type: String }) taskTypeSelectedValue = ""
     @property({ type: Boolean }) isEditMode = false
+    @property({ type: Number }) pendingTasksCount = 0
 
     _myTasks = new Task(this, {        
         task: async([], {signal}) => {
@@ -751,7 +775,22 @@ class MyTaskComponent extends LitElement {
             }
         },
         args: () => []
-    })    
+    })
+
+    _pendingCountTask = new Task(this, {
+        task: async ([], { signal }) => {
+            const response = await fetch(`${apiUrl}/count-pending`, { signal })
+            if (!response.ok) throw new Error(`Response status: ${response.status}`)
+            return response.json() as Promise<number>
+        },
+        args: () => []
+    })
+
+    willUpdate() {
+        if (this._pendingCountTask.value !== undefined) {
+            this.pendingTasksCount = this._pendingCountTask.value
+        }
+    }
 
     _showTaskModal() {        
         this.showModal = true        
@@ -859,6 +898,7 @@ class MyTaskComponent extends LitElement {
 
             this.requestUpdate();
             this._myTasks.run();
+            this._pendingCountTask.run();
 
         } catch (err) {
             console.log(err);
@@ -891,6 +931,7 @@ class MyTaskComponent extends LitElement {
 
             this.requestUpdate();
             this._myTasks.run();
+            this._pendingCountTask.run();
 
         } catch (err) {
             console.log(err);
@@ -999,6 +1040,7 @@ class MyTaskComponent extends LitElement {
         this.searchTerm = ""
         this._searchResults = []
         await this._myTasks.run()
+        this._pendingCountTask.run()
         
         
     }
@@ -1220,8 +1262,11 @@ class MyTaskComponent extends LitElement {
                 </div>                
             </div>            
             <div class="header-info">
-                <span id="current-date"></span>
-            </div>            
+                <div class="pending-badge">
+                    <span>Tarefas pendentes</span>
+                    <span class="pending-count">${this.pendingTasksCount}</span>
+                </div>
+            </div>
         </div>
         ${colorLegend}
         `
