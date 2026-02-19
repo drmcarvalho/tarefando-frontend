@@ -121,7 +121,7 @@ class MyTaskComponent extends LitElement {
             background-color: #f0a500;
             color: #1a1a1a;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 15px;
             border-radius: 10px;
             padding: 1px 7px;
             min-width: 20px;
@@ -1041,8 +1041,6 @@ class MyTaskComponent extends LitElement {
         this._searchResults = []
         await this._myTasks.run()
         this._pendingCountTask.run()
-        
-        
     }
 
     async _fetchSearchResults() {
