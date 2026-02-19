@@ -779,9 +779,16 @@ class MyTaskComponent extends LitElement {
 
     _pendingCountTask = new Task(this, {
         task: async ([], { signal }) => {
-            const response = await fetch(`${apiUrl}/count-pending`, { signal })
-            if (!response.ok) throw new Error(`Response status: ${response.status}`)
-            return response.json() as Promise<number>
+            try {
+                const response = await fetch(`${apiUrl}/count-pending`, { signal })
+                if (!response.ok) {
+                    throw new Error(`Response status: ${response.status}`)
+                }
+                return response.json()
+            }
+            catch(err) {
+                console.log(err)
+            }
         },
         args: () => []
     })
@@ -835,7 +842,7 @@ class MyTaskComponent extends LitElement {
         return grouped
     }
 
-    _closeTaskModal(e: Event) {   
+    _closeTaskModal() {   
         this.taskTitle = ""
         this.taskDescription = ""
         this.taskTypeSelectedValue = ""
@@ -1032,7 +1039,7 @@ class MyTaskComponent extends LitElement {
             }
         }
 
-        this._closeTaskModal(e)
+        this._closeTaskModal()
 
         this.isEditMode = false
         this.idTask = 0
