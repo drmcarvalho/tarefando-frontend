@@ -2,6 +2,7 @@ import { Task } from "@lit/task";
 import { LitElement, html, css } from "lit";
 import { property } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
+ import { classMap } from "lit/directives/class-map.js";
 
 const apiUrl: string = "http://localhost:5235/api/tasks"
 
@@ -167,6 +168,10 @@ class MyTaskComponent extends LitElement {
             font-size: 14px;
             color: #00d4aa;
             font-weight: 500;
+        }
+
+        .color-pendent {
+            color: #f0a500;
         }
 
         /* Estilos para modo não agrupado */
@@ -1155,33 +1160,35 @@ class MyTaskComponent extends LitElement {
         if (this.isGroupedByDay) {            
             return html`
                 <div class="container" id="tasks-grouped">
-                    ${map(item, (g: any) => html`
-                    <div class="day-group">
-                        <div class="day-header" @click="${this._handleClickToggleDayGroup}">
-                            <div class="day-title">${formatDateToFullText(g.day)}</div>
-                            <div class="day-summary">${g.tasks?.length} tarefa(s) • ${g.tasks?.filter(function(i: any) { return i.isCompleted }).length} completa(s) • ${g.tasks?.filter(function(i: any) { return !i.isCompleted && !i.isCaceled }).length} pendente(s) • ${g.tasks?.filter(function(i: any) { return i.isCaceled }).length} cancelada(s) </div>
-                            <span class="collapse-icon">▼</span>
-                        </div>
-                        <div class="tasks-list">
-                            ${map(g.tasks, (t: any) => html`
-                                <div class="task-item" data-type="${t.taskTypeString}">
-                                <div class="task-content">                                        
-                                    <div class="task-details">
-                                        <div class="task-title">${t.title}</div>
-                                        <div class="task-description">${t.description}</div>                                        
-                                    </div>                                        
-                                    ${t.isCaceled ? html`<div class="status-badge status-cancelled">Cancelada</div>` : !t.isCompleted ? html`<div class="status-badge status-pending">Pendente</div>` : html`<div class="status-badge status-completed">Completa</div>`}
-                                </div>
-                                <div class="task-actions">
-                                    <button class="action-btn btn-view" @click="${this._viewHandleClick}" id="${t.id}">Ver</button>
-                                    ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" @click="${this._completeTaskHandleClick}" id="${t.id}">Concluir</button>`}
-                                    ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelTaskHandleClick}" id="${t.id}">Cancelar</button>` : ''}
-                                </div>
+                    ${map(item, (g: any) => { 
+                        const pendingCount = g.tasks?.filter((i: any) => !i.isCompleted && !i.isCaceled).length ?? 0
+                        return html`
+                        <div class="day-group">
+                            <div class="day-header" @click="${this._handleClickToggleDayGroup}">
+                                <div class="day-title">${formatDateToFullText(g.day)}</div>
+                                <div class="day-summary">${g.tasks?.length} tarefa(s) • ${g.tasks?.filter(function(i: any) { return i.isCompleted }).length} completa(s) • <span class=${classMap({'color-pendent': pendingCount > 0 })}>${pendingCount} pendente(s)</span> • ${g.tasks?.filter(function(i: any) { return i.isCaceled }).length} cancelada(s)</div>
+                                <span class="collapse-icon">▼</span>
                             </div>
-                            `)}
-                        </div>
-                    </div>
-                    `)}
+                            <div class="tasks-list">
+                                ${map(g.tasks, (t: any) => html`
+                                    <div class="task-item" data-type="${t.taskTypeString}">
+                                        <div class="task-content">                                        
+                                            <div class="task-details">
+                                                <div class="task-title">${t.title}</div>
+                                                <div class="task-description">${t.description}</div>                                        
+                                            </div>                                        
+                                            ${t.isCaceled ? html`<div class="status-badge status-cancelled">Cancelada</div>` : !t.isCompleted ? html`<div class="status-badge status-pending">Pendente</div>` : html`<div class="status-badge status-completed">Completa</div>`}
+                                        </div>
+                                        <div class="task-actions">
+                                            <button class="action-btn btn-view" @click="${this._viewHandleClick}" id="${t.id}">Ver</button>
+                                            ${(t.isCaceled || t.isCompleted) ? '' : html`<button class="action-btn btn-complete" @click="${this._completeTaskHandleClick}" id="${t.id}">Concluir</button>`}
+                                            ${!t.isCaceled && !t.isCompleted ? html`<button class="action-btn btn-cancel" @click="${this._cancelTaskHandleClick}" id="${t.id}">Cancelar</button>` : ''}
+                                        </div>
+                                    </div>
+                                `)}
+                            </div>
+                        </div>`
+                    })}
                 </div>                
                 ${taskModal}
                 ${addTask}
@@ -1268,7 +1275,7 @@ class MyTaskComponent extends LitElement {
             </div>            
             <div class="header-info">
                 <div class="pending-badge">
-                    <span>Tarefas pendentes</span>
+                    <span>Pendentes</span>
                     <span class="pending-count">${this.pendingTasksCount}</span>
                 </div>
             </div>
