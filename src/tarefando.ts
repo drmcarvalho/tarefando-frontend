@@ -248,10 +248,15 @@ class MyTaskComponent extends LitElement {
         }
     }
 
-    _handleClickToggleDayGroup(e: Event) {        
+    _handleClickToggleDayGroup(e: Event) {
         const target = e.currentTarget as HTMLElement
         const dayGroup = target.parentNode as HTMLElement
-        dayGroup?.classList.toggle('collapsed')        
+        dayGroup?.classList.toggle('collapsed')
+    }
+
+    _collapseAllDayGroups() {
+        const groups = this.renderRoot.querySelectorAll('.day-group')
+        groups.forEach(group => group.classList.add('collapsed'))
     }
 
     async _handleSubmitForm(e: Event) {
@@ -436,6 +441,7 @@ class MyTaskComponent extends LitElement {
         if (this.isGroupedByDay) {            
             return html`
                 <div class="container" id="tasks-grouped">
+                    <button class="collapse-all-btn" @click="${this._collapseAllDayGroups}">Recolher Todos ▲</button>
                     ${map(item, (g: any) => { 
                         const pendingCount = g.tasks?.filter((i: any) => !i.isCompleted && !i.isCaceled).length ?? 0
                         return html`

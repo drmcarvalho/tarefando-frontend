@@ -365,6 +365,25 @@ export const style = css`
         transition: transform 0.3s;
     }
 
+    .collapse-all-btn {
+        display: block;
+        margin: 0 0 15px auto;
+        padding: 8px 16px;
+        background-color: #3a3a3a;
+        color: #00d4aa;
+        border: 1px solid #555;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .collapse-all-btn:hover {
+        background-color: #444;
+        border-color: #00d4aa;
+    }
+
     .collapsed .collapse-icon {
         transform: rotate(-90deg);
     }
